@@ -45,7 +45,7 @@ class IdStore(val context: MainActivity) {
                 "{\n" +
                 "  \"curve\": \"ed25519\",\n" +
                 "  \"public\": \"${newId.verifyKey.toBase64()}\",\n" +
-                "  \"private\": \"${newId.signingKey!!.toBase64()}\",\n" +
+                "  \"private\": \"${newId.privateKeyOps!!.getSigningKey()!!.toBase64()}\",\n" +
                 "  \"id\": \"${newId.toRef()}\"\n" +
                 "}\n" +
                 "\n" +
