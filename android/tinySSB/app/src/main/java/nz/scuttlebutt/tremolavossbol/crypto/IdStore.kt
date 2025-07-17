@@ -20,6 +20,7 @@ class IdStore(val context: MainActivity) {
         val id = readFromFile()
         if (id == null) {
             // Log.d("IdStore init", "no secret found")
+            //TODO: frage ob Yubikey oder Sodium nutzen
             identity = SSBid() // create
             writeToFile(identity)
         } else
@@ -87,7 +88,7 @@ class IdStore(val context: MainActivity) {
         return null
     }
 
-    fun setNewIdentity(newSecret: ByteArray?): Boolean {
+    fun setNewIdentity(newSecret: ByteArray?): Boolean { //not supported with YubiKey
         val newId = if (newSecret == null) SSBid() else SSBid(newSecret)
         val oldId = identity
         if (writeToFile(newId)) {
