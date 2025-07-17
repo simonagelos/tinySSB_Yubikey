@@ -159,7 +159,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
                     Toast.LENGTH_LONG).show()
             }
             "importSecret" -> {
-                act.idStore.setNewIdentity(Base64.decode(args[1], Base64.NO_WRAP))
+                act.idStore.setNewIdentity(Base64.decode(args[1], Base64.NO_WRAP), null)
                 act.tinyRepo.reset()
 
                 // restart App
@@ -173,7 +173,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
             }
             "wipe" -> {
                 act.settings!!.resetToDefault()
-                act.idStore.setNewIdentity(null) // creates new identity
+                act.idStore.setNewIdentity(null, null) // creates new identity
                 act.tinyRepo.reset()
 
                 if (act.websocket != null)
@@ -491,7 +491,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
 
     private fun importIdentity(secret: String): Boolean {
         Log.d("D/importIdentity", secret)
-        if (act.idStore.setNewIdentity(Base64.decode(secret, Base64.DEFAULT))) {
+        if (act.idStore.setNewIdentity(Base64.decode(secret, Base64.DEFAULT), null)) {
             // FIXME: remove all decrypted content in the database, try to decode new one
             Toast.makeText(act, "Imported of ID worked. You must restart the app.",
                 Toast.LENGTH_SHORT).show()

@@ -4,6 +4,7 @@ import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
 import com.goterl.lazysodium.interfaces.Hash
 import com.goterl.lazysodium.interfaces.SecretBox
+import com.goterl.lazysodium.interfaces.Sign
 import com.goterl.lazysodium.utils.Key
 import java.nio.charset.StandardCharsets
 
@@ -55,6 +56,20 @@ class SodiumAPI {
                 key
             )
             return if (valid) decrypted else null
+        }
+
+        @JvmStatic
+        fun ed25519PktoCurve(pk: ByteArray): ByteArray {
+            val c = ByteArray(Sign.CURVE25519_PUBLICKEYBYTES)
+            lazySodiumInst.convertPublicKeyEd25519ToCurve25519(c, pk)
+            return c
+        }
+
+        @JvmStatic
+        fun ed25519SktoCurve(sk: ByteArray): ByteArray {
+            val c = ByteArray(Sign.CURVE25519_SECRETKEYBYTES)
+            lazySodiumInst.convertSecretKeyEd25519ToCurve25519(c, sk)
+            return c
         }
 
         @JvmStatic

@@ -407,7 +407,7 @@ class Replica(val context: MainActivity, val datapath: File, val fid: ByteArray)
         val nam = DMX_PFX + fid + seq.toByteArray() + state.prev
         val dmx = nam.sha256().sliceArray(0 until DMX_LEN)
         val msg = dmx + ByteArray(1) { PKTTYPE_plain48.toByte()} + content
-        val wire = msg + signDetached(nam + msg, context.idStore.identity.signingKey!!)
+        val wire = msg + context.idStore.identity.sign(nam + msg)!!
         if(wire.size != TINYSSB_PKT_LEN)
             return -1
         if(!verifySignDetached(
@@ -454,7 +454,7 @@ class Replica(val context: MainActivity, val datapath: File, val fid: ByteArray)
 
         Log.d("replica write", "dmx is ${dmx.toHex()}, chnk_cnt: ${chunks.size}")
         val msg = dmx + ByteArray(1) { PKTTYPE_chain20.toByte()} + payload
-        var wire = msg + signDetached(nam + msg, context.idStore.identity.signingKey!!)
+        val wire = msg + context.idStore.identity.sign(nam + msg)!!
         if(wire.size != TINYSSB_PKT_LEN)
             return -1
         if(!verifySignDetached(
