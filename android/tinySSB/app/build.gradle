@@ -90,6 +90,19 @@ dependencies {
     implementation 'com.goterl:lazysodium-android:5.0.2@aar'
     implementation 'net.java.dev.jna:jna:5.9.0@aar'
 
+    // Bouncy Castle
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+
+    // YubiKey
+    implementation('com.yubico.yubikit:android:2.8.1') {
+        exclude group: 'org.slf4j'
+        exclude group: 'com.github.spotbugs'
+    }
+    implementation('com.yubico.yubikit:piv:2.8.1') {
+        exclude group: 'org.slf4j'
+        exclude group: 'com.github.spotbugs'
+    }
+
     // database
     // implementation "androidx.room:room-runtime:2.3.0"
     // kapt "androidx.room:room-compiler:2.3.0"

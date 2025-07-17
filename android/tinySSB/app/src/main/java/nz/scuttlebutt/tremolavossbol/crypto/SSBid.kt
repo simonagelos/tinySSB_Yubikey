@@ -2,48 +2,18 @@ package nz.scuttlebutt.tremolavossbol.crypto
 
 import java.security.SecureRandom
 import android.util.Base64
-import com.goterl.lazysodium.interfaces.Sign
-import com.goterl.lazysodium.utils.KeyPair
 import nz.scuttlebutt.tremolavossbol.crypto.SodiumAPI.Companion.ed25519PktoCurve
 import nz.scuttlebutt.tremolavossbol.crypto.SodiumAPI.Companion.ed25519SktoCurve
 import org.json.JSONObject
 
-import nz.scuttlebutt.tremolavossbol.crypto.SodiumAPI.Companion.signDetached
 import nz.scuttlebutt.tremolavossbol.utils.HelperFunctions.Companion.toBase64
 import nz.scuttlebutt.tremolavossbol.utils.Json_PP
 
 class SSBid { // ed25519
 
-    constructor(secret: ByteArray, public: ByteArray) {
-        privateKeyOps = SodiumPrivateKeyOps(secret)
+    constructor(secret: PrivateKeyOps, public: ByteArray) {
+        privateKeyOps = secret
         verifyKey = public
-    }
-
-    constructor(key: ByteArray) {
-        if (key.size == Sign.ED25519_PUBLICKEYBYTES) {
-            privateKeyOps = null
-            verifyKey = key
-        } else { // secret key
-            privateKeyOps = SodiumPrivateKeyOps(key)
-            verifyKey = ByteArray(Sign.ED25519_PUBLICKEYBYTES)
-            lazySodiumInst.cryptoSignEd25519SkToPk(verifyKey, key)
-        }
-    }
-
-    constructor(str: String) {
-        val s = str.slice(1..str.lastIndex).removeSuffix(".ed25519")
-        verifyKey = Base64.decode(s, Base64.NO_WRAP)
-    }
-
-    constructor(k: KeyPair) {
-        privateKeyOps = SodiumPrivateKeyOps(k.secretKey.asBytes)
-        verifyKey = k.publicKey.asBytes
-    }
-
-    constructor() { // generate new ID
-        val keypair = lazySodiumInst.cryptoSignKeypair()
-        privateKeyOps = SodiumPrivateKeyOps(keypair.secretKey.asBytes)
-        verifyKey = keypair.publicKey.asBytes
     }
 
     var privateKeyOps:   PrivateKeyOps? = null
@@ -58,8 +28,7 @@ class SSBid { // ed25519
 
     fun toExportString(): String? {
         if (privateKeyOps == null) return null
-        val privateKey = privateKeyOps!!.getSigningKey()
-        if (privateKey == null) return null
+        val privateKey = privateKeyOps!!.getSigningKey()!!
         val s = Base64.encode(privateKey, Base64.NO_WRAP).decodeToString()
         return "{\"curve\":\"ed25519\",\"secret\":\"${s}\"}"
     }
