@@ -36,7 +36,13 @@ import androidx.webkit.WebViewClientCompat
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.zxing.integration.android.IntentIntegrator
+import com.yubico.yubikit.android.YubiKitManager
+import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
+import com.yubico.yubikit.core.smartcard.SmartCardConnection
+import com.yubico.yubikit.piv.PivSession
+import com.yubico.yubikit.piv.jca.PivProvider
 import nz.scuttlebutt.tremolavossbol.crypto.IdStore
+import nz.scuttlebutt.tremolavossbol.crypto.YubiPrivateKeyOps
 import nz.scuttlebutt.tremolavossbol.tssb.Demux
 import nz.scuttlebutt.tremolavossbol.tssb.GOset
 import nz.scuttlebutt.tremolavossbol.tssb.IO
@@ -46,11 +52,14 @@ import nz.scuttlebutt.tremolavossbol.tssb.WebsocketIO
 import nz.scuttlebutt.tremolavossbol.tssb.ble.BlePeers
 import nz.scuttlebutt.tremolavossbol.tssb.ble.BluetoothEventListener
 import nz.scuttlebutt.tremolavossbol.utils.Constants
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.json.JSONObject
 import tremolavossbol.R
 import java.io.File
+import java.lang.Thread.sleep
 import java.net.InetAddress
 import java.net.MulticastSocket
+import java.security.Security
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -81,6 +90,9 @@ class MainActivity : Activity() {
     var broadcastReceiver: BroadcastReceiver? = null
     var isWifiConnected = false
     var ble_event_listener: BluetoothEventListener? = null
+    lateinit var yubikit: YubiKitManager
+    private var pivSession: PivSession? = null
+
 
     /*
     var broadcast_socket: DatagramSocket? = null
@@ -116,6 +128,12 @@ class MainActivity : Activity() {
 
         settings = Settings(this)
         idStore = IdStore(this)
+
+        // Update Bouncy Castle for Ed25519 and X25519
+        Security.removeProvider("BC")
+        Security.addProvider(BouncyCastleProvider())
+
+        yubikit = YubiKitManager(this)
 
         // wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
         // mlock = wifiManager?.createMulticastLock("lock")
@@ -496,6 +514,16 @@ class MainActivity : Activity() {
         }
     }
 
+    fun getActivePivSession(): PivSession? {
+        try {
+            pivSession!!.serialNumber // Check if the session is still active
+            return pivSession
+        } catch (e: Exception) {
+            Log.d("YubiKey", "PIV session is not active: ${e.message}")
+            return null
+        }
+    }
+
     override fun onResume() {
         Log.d("onResume", "")
         registerUntrusted()
@@ -508,6 +536,30 @@ class MainActivity : Activity() {
                 .registerNetworkCallback(networkRequest, networkCallback!!)
         } catch (e: Exception) {}
         */
+
+        try {
+            yubikit.startNfcDiscovery(NfcConfiguration(), this) { device ->
+                Log.d("YubiKey", "YubiKey connected via NFC.")
+                device.requestConnection(SmartCardConnection::class.java) { result ->
+                    try {
+                        pivSession = PivSession(result.value)
+                        pivSession!!.verifyPin(YubiPrivateKeyOps.DEFAULT_PIN)
+                        pivSession!!.authenticate(YubiPrivateKeyOps.DEFAULT_MGMT)
+                        Security.insertProviderAt(PivProvider(pivSession!!), 1)
+                        Log.d("YubiKey", "PIV session initialized.")
+
+                        while (true) { // Keep the session alive
+                            pivSession!!.serialNumber
+                            sleep(1000)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("YubiKey", "Error connecting to YubiKey: ${e.message}")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("YubiKey", "Error starting NFC discovery: ${e.message}")
+        }
 
         try {
             ble = BlePeers(this)
@@ -523,6 +575,7 @@ class MainActivity : Activity() {
     override fun onPause() {
         Log.d("onPause", "")
         super.onPause()
+        yubikit.stopNfcDiscovery(this);
         ble?.stopBluetooth()
 
         if (websocket != null)

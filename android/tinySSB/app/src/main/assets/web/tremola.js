@@ -294,7 +294,7 @@ function import_id(json_str) {
         return false // wrong format
     }
 
-    backend("importSecret " + json['secret'])
+    backend("importSecret 1 " + json['secret'])
     return true
 }
 

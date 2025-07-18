@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets
 import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.spec.PKCS8EncodedKeySpec
+import kotlin.text.chunked
 
 class IdStore(val context: MainActivity) {
 
@@ -89,8 +90,10 @@ class IdStore(val context: MainActivity) {
         return false
     }
 
-    private fun storeOnYubiKey(piv: PivSession, seed: ByteArray): Boolean {
+    private fun storeOnYubiKey(piv: PivSession, secret: ByteArray): Boolean {
         try {
+            val seed = secret.take(32).toByteArray()
+
             // Generate the Ed25519 key
             val edPrivateKeyParams = Ed25519PrivateKeyParameters(seed)
             val edKeyFactory = KeyFactory.getInstance("Ed25519", "BC")
@@ -166,6 +169,7 @@ class IdStore(val context: MainActivity) {
 
         val newId = if (piv != null) {
             if (storeOnYubiKey(piv, secretKey)) {
+                Log.d("IdStore", "Stored keys on YubiKey")
                 SSBid(YubiPrivateKeyOps(), publicKey)
             } else {
                 Log.d("IdStore", "Failed to store keys on YubiKey")
