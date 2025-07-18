@@ -24,6 +24,7 @@ import android.view.Window
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
@@ -547,6 +548,9 @@ class MainActivity : Activity() {
                         pivSession!!.authenticate(YubiPrivateKeyOps.DEFAULT_MGMT)
                         Security.insertProviderAt(PivProvider(pivSession!!), 1)
                         Log.d("YubiKey", "PIV session initialized.")
+                        runOnUiThread {
+                            Toast.makeText(this, "YubiKey connected", Toast.LENGTH_LONG).show()
+                        }
 
                         while (true) { // Keep the session alive
                             pivSession!!.serialNumber
@@ -554,6 +558,9 @@ class MainActivity : Activity() {
                         }
                     } catch (e: Exception) {
                         Log.e("YubiKey", "Error connecting to YubiKey: ${e.message}")
+                        runOnUiThread {
+                            Toast.makeText(this, "Connection to YubiKey lost", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
             }

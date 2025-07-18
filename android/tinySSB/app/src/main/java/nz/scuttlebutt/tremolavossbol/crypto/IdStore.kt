@@ -157,10 +157,6 @@ class IdStore(val context: MainActivity) {
         return null
     }
 
-<<<<<<< HEAD
-    fun setNewIdentity(newSecret: ByteArray?): Boolean { //not supported with YubiKey
-        val newId = if (newSecret == null) SSBid() else SSBid(newSecret)
-=======
     fun setNewIdentity(newSecret: ByteArray?, piv: PivSession?): Boolean {
         // TODO: Check if newSecret is a valid Ed25519 key
         val secretKey = newSecret ?: SodiumAPI.lazySodiumInst.cryptoSignKeypair().secretKey.asBytes
@@ -179,7 +175,6 @@ class IdStore(val context: MainActivity) {
             SSBid(SodiumPrivateKeyOps(secretKey), publicKey)
         }
 
->>>>>>> 0a6ab4bd345917b739d20edcfe7fd0e651b99d32
         val oldId = identity
         if (writeToFile(newId)) {
             val id = readFromFile()
