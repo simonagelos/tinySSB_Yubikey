@@ -24,9 +24,7 @@ function btn_import_id_yubikey() {
     if(str == "")
         return
     var r = import_id_yubikey(str)
-    if(r) {
-        launch_snackbar("Successfully imported, restarting...")
-    } else {
+    if (!r) {
         launch_snackbar("wrong format")
     }
 }
@@ -35,9 +33,7 @@ function btn_import_id() {
     if(str == "")
         return
     var r = import_id(str)
-    if(r) {
-        launch_snackbar("Successfully imported, restarting...")
-    } else {
+    if (!r) {
         launch_snackbar("wrong format")
     }
 }

@@ -477,9 +477,7 @@ function qr_scan_success(s) {
             break
         case QR_SCAN_TARGET.IMPORT_ID:
             r = import_id(s)
-            if (r) {
-                launch_snackbar("Successfully imported, restarting...")
-            } else {
+            if (!r) {
                 launch_snackbar("wrong format")
             }
             break

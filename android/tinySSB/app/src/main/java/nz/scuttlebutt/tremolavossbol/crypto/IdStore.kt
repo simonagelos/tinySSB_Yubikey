@@ -158,9 +158,12 @@ class IdStore(val context: MainActivity) {
     }
 
     fun setNewIdentity(newSecret: ByteArray?, piv: PivSession?): Boolean {
-        // TODO: Check if newSecret is a valid Ed25519 key
         val secretKey = newSecret ?: SodiumAPI.lazySodiumInst.cryptoSignKeypair().secretKey.asBytes
         val publicKey = ByteArray(Sign.ED25519_PUBLICKEYBYTES)
+        if (secretKey.size != Sign.ED25519_SECRETKEYBYTES) {
+            Log.e("IdStore", "Invalid secret key size: ${secretKey.size}")
+            return false
+        }
         SodiumAPI.lazySodiumInst.cryptoSignEd25519SkToPk(publicKey, secretKey)
 
         val newId = if (piv != null) {
