@@ -425,7 +425,6 @@ function generateQR(s) {
     }
     overlayIsActive = true;
 }
-// start scan for secret key when clicking button in UI
 function qr_scan_start(target) {
     // test if Android is defined ...
     curr_qr_scan_target = target

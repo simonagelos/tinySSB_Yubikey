@@ -282,8 +282,6 @@ function fid2display(fid) {
         a = id2b32(fid) // fid.substring(0, 9);
     return a;
 }
-// use to sent Yubikey to backend
-// TODO: add argument if yubikey is used or not
 function import_id(json_str) {
     var json
     try {
@@ -299,6 +297,7 @@ function import_id(json_str) {
     return true
 }
 
+// sent secret key to backand, stores in yubikey
 function import_id_yubikey(json_str) {
     var json
     try {
