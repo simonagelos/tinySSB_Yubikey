@@ -39,7 +39,7 @@ import androidx.work.WorkManager
 import com.google.zxing.integration.android.IntentIntegrator
 import com.yubico.yubikit.android.YubiKitManager
 import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
-import com.yubico.yubikit.android.transport.nfc.NfcYubiKeyDevice
+import com.yubico.yubikit.android.transport.usb.UsbConfiguration
 import com.yubico.yubikit.core.YubiKeyDevice
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.piv.KeyType
@@ -141,6 +141,9 @@ class MainActivity : Activity() {
         Security.addProvider(BouncyCastleProvider())
 
         yubikit = YubiKitManager(this)
+        yubikit.startUsbDiscovery(UsbConfiguration()) { device ->
+            connectToYubiKey(device)
+        }
 
         // wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
         // mlock = wifiManager?.createMulticastLock("lock")
@@ -532,16 +535,16 @@ class MainActivity : Activity() {
     }
 
     /**
-     * Sets up the connection to a discovered YubiKey.
+     * Sets up the connection to a YubiKey discovered via NFC or USB.
      * Starts a [PivSession] and verifies the PIN and management key.
      * The session is kept alive by continuously accessing the serial number.
      * If the YubiKey is not supported or the connection fails, an error message is displayed.
      */
     private fun connectToYubiKey(device: YubiKeyDevice) {
         runOnUiThread {
-            Toast.makeText(this, "YubiKey discovered via NFC.\nStarting connection...", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "YubiKey discovered.\nStarting connection...", Toast.LENGTH_LONG).show()
         }
-        Log.d("YubiKey", "YubiKey discovered via NFC.")
+        Log.d("YubiKey", "YubiKey discovered.")
 
         device.requestConnection(SmartCardConnection::class.java) { result ->
             try {
@@ -583,7 +586,7 @@ class MainActivity : Activity() {
         Log.d("onResume", "")
         try {
             yubikit.startNfcDiscovery(NfcConfiguration(), this) { device ->
-               connectToYubiKey(device)
+                connectToYubiKey(device)
             }
         } catch (e: Exception) {
             Log.e("YubiKey", "NFC not available: ${e.message}")
@@ -614,7 +617,7 @@ class MainActivity : Activity() {
     override fun onPause() {
         Log.d("onPause", "")
         super.onPause()
-        yubikit.stopNfcDiscovery(this);
+        yubikit.stopNfcDiscovery(this)
         ble?.stopBluetooth()
 
         if (websocket != null)
@@ -641,6 +644,7 @@ class MainActivity : Activity() {
         server_socket = null
         */
         super.onDestroy()
+        yubikit.stopUsbDiscovery()
         ble?.stopBluetooth()
 
         if (websocket != null) {
