@@ -94,6 +94,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
         }
     }
 
+    //interface with frontend, sents frontend request to Kotlin
     @JavascriptInterface
     fun onFrontendRequest(s: String) {
         //handle the data captured from webview}

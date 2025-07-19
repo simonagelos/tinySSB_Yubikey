@@ -282,7 +282,8 @@ function fid2display(fid) {
         a = id2b32(fid) // fid.substring(0, 9);
     return a;
 }
-
+// use to sent Yubikey to backend
+// TODO: add argument if yubikey is used or not
 function import_id(json_str) {
     var json
     try {
@@ -358,7 +359,7 @@ function backend(cmdStr) { // send this to Kotlin (or simulate in case of browse
         b2f_new_event(e)
         console.log(e)
     } else {
-        // console.log('backend', JSON.stringify(cmdStr))
+       //  console.log('backend', JSON.stringify(cmdStr))
     }
 }
 

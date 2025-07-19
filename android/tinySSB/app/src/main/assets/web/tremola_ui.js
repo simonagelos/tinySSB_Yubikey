@@ -310,6 +310,7 @@ function closeOverlay() {
     document.getElementById('connection-overlay').style.display = 'none';
     document.getElementById('import-id-overlay').style.display = 'none';
     document.getElementById('toast-overlay').style.display = 'none';
+    document.getElementById('YubiKey-scan-overlay').style.display = 'none';
 
     // kanban overlays
     document.getElementById('div:menu_history').style.display = 'none';
@@ -425,13 +426,14 @@ function generateQR(s) {
     }
     overlayIsActive = true;
 }
-
+// start scan for secret key when clicking button in UI
 function qr_scan_start(target) {
     // test if Android is defined ...
     curr_qr_scan_target = target
     backend("qrscan.init");
     closeOverlay();
 }
+
 
 function qr_scan_success(s) {
     closeOverlay();
