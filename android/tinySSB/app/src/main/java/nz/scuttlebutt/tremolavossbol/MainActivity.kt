@@ -529,7 +529,6 @@ class MainActivity : Activity() {
             pivSession!!.serialNumber // Check if the session is still active
             return pivSession
         } catch (e: Exception) {
-            Log.d("YubiKey", "PIV session is not active: ${e.message}")
             return null
         }
     }
@@ -548,27 +547,28 @@ class MainActivity : Activity() {
 
         device.requestConnection(SmartCardConnection::class.java) { result ->
             try {
-                // Use tmpPiv to avoid exposure before insertion of the provider
+                // Use tmpPiv to avoid exposing the session before insertion of provider
                 val tmpPiv = PivSession(result.value)
                 tmpPiv.verifyPin(YubiPrivateKeyOps.DEFAULT_PIN)
                 tmpPiv.authenticate(YubiPrivateKeyOps.DEFAULT_MGMT)
 
+                // Check if the YubiKey supports the required key types
                 tmpPiv.checkKeySupport(KeyType.ED25519, PinPolicy.ONCE, TouchPolicy.NEVER, false)
                 tmpPiv.checkKeySupport(KeyType.ED25519, PinPolicy.ONCE, TouchPolicy.NEVER, false)
 
                 Security.removeProvider("YKPiv")
                 Security.insertProviderAt(PivProvider(tmpPiv), 1)
-                pivSession = tmpPiv
                 Log.d("YubiKey", "PIV session initialized.")
                 runOnUiThread {
                     Toast.makeText(this, "YubiKey connected", Toast.LENGTH_LONG).show()
                 }
+                pivSession = tmpPiv
 
                 while (true) { // Keep the session alive
-                    pivSession!!.serialNumber
                     sleep(3000)
+                    pivSession!!.serialNumber
                 }
-            } catch (e: UnsupportedOperationException) {
+            } catch (e: UnsupportedOperationException) { // Old firmware on YubiKey
                 Log.e("YubiKey", "Error connecting to YubiKey: ${e.message}")
                 runOnUiThread {
                     Toast.makeText(this, "${e.message}", Toast.LENGTH_LONG).show()

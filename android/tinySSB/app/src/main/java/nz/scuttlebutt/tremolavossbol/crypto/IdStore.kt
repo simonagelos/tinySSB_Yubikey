@@ -90,6 +90,15 @@ class IdStore(val context: MainActivity) {
         return false
     }
 
+    /**
+     * Stores corresponding Ed25519 and X25519 keys on the YubiKey.
+     * The keys are generated from the given secret.
+     * Ed25519 is stored in [Slot.AUTHENTICATION] and X25519 in [Slot.KEY_MANAGEMENT].
+     *
+     * @param piv The PivSession to interact with the YubiKey. It is assumed that the
+     * session has been setup by using [PivSession.verifyPin] and [PivSession.authenticate].
+     * @param secret 64 byte Ed25519 secret key
+     */
     private fun storeOnYubiKey(piv: PivSession, secret: ByteArray): Boolean {
         try {
             val seed = secret.take(32).toByteArray()

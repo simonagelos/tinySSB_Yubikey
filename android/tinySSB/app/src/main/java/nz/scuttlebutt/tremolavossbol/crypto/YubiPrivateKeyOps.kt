@@ -22,12 +22,18 @@ class YubiPrivateKeyOps : PrivateKeyOps {
         )
     }
 
+    /**
+     * Signs the given data using an Ed25519 private key stored on the YubiKey.
+     * The private key should be stored in [Slot.AUTHENTICATION].
+     * It is assumed that a PIV session has already been established and verified with
+     * [com.yubico.yubikit.piv.PivSession.verifyPin].
+     */
     override fun sign(data: ByteArray): ByteArray? {
         Log.d("YubiKey", "Signing")
 
         val privateKey = loadPrivateKey(Slot.AUTHENTICATION) // Ed25519 key
 
-        try {// Sign the data using the private key
+        try { // Sign the data using the private key
             val signature = Signature.getInstance("Ed25519")
             signature.initSign(privateKey)
             signature.update(data)
@@ -38,12 +44,19 @@ class YubiPrivateKeyOps : PrivateKeyOps {
         }
     }
 
+    /**
+     * Derives a shared secret using an X25519 private key stored on the YubiKey.
+     * The private key should be stored in [Slot.KEY_MANAGEMENT].
+     * It is assumed that a PIV session has already been established and verified with
+     * [com.yubico.yubikit.piv.PivSession.verifyPin].
+     */
     override fun cryptoScalarMult(publicKey: ByteArray): ByteArray? {
         Log.d("YubiKey", "Deriving shared secret")
 
         val privateKey = loadPrivateKey(Slot.KEY_MANAGEMENT) // X25519 key
 
-        try {// Convert the public key to a JCA format suitable for KeyAgreement
+        try {
+            // Convert the public key to a JCA format suitable for KeyAgreement
             val pubParams = X25519PublicKeyParameters(publicKey, 0);
             val spki = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo(pubParams);
             val x509PubBytes = spki.getEncoded();

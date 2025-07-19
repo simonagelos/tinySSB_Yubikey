@@ -882,9 +882,9 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
         while (act.idStore.identity.privateKeyOps is YubiPrivateKeyOps && act.getActivePivSession() == null) {
             Log.d("YubiKey", "Waiting for PIV Session...")
             act.runOnUiThread {
-                Toast.makeText(act, "Please connect YubiKey", Toast.LENGTH_SHORT).show()
+                Toast.makeText(act, "Waiting for YubiKey to connect", Toast.LENGTH_SHORT).show()
             }
-            Thread.sleep(1000) // wait for YubiKey to be connected
+            Thread.sleep(2000) // wait for YubiKey to be connected
         }
         return act.getActivePivSession()
     }
