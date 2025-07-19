@@ -410,12 +410,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
                 try {
                     val entryBytes = decodedEntry?.let {it.getBytes()}
                     Log.d("entryBytes1", entryBytes.toString())
-                    // Check if YubiKey is connected if it is needed
-                    if (act.idStore.identity.privateKeyOps is YubiPrivateKeyOps && act.getActivePivSession() == null) {
-                        Log.d("YubiKey", "YubiKey is not connected for decryption")
-                        Toast.makeText(act, "YubiKey is not connected", Toast.LENGTH_SHORT).show()
-                        continue // YubiKey is not connected
-                    }
+                    waitForPivSession() // Ensure YubiKey is connected if needed
                     //decrypt the bytes to get the clear text
                     val clear = entryBytes?.let { act.idStore.identity.decryptPrivateMessage(it) }
                     Log.d("clear", clear.toString())
@@ -594,11 +589,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
 
         val body_encr = Bipf.encode(Bipf.mkBytes(encrypted))
 
-        // Check if YubiKey is connected if it is needed
-        if (act.idStore.identity.privateKeyOps is YubiPrivateKeyOps && act.getActivePivSession() == null) {
-            Log.d("YubiKey", "YubiKey is not connected for decryption")
-            Toast.makeText(act, "YubiKey is not connected", Toast.LENGTH_SHORT).show()
-        }
+        waitForPivSession() // Ensure YubiKey is connected if needed
         //test if entry can be decrypted
         val clear = encrypted?.let { act.idStore.identity.decryptPrivateMessage(it) }
         if (clear != null) {
@@ -659,12 +650,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
                 //get bytes from the decoded entry
                 val entryBytes = decodedEntry?.let {it.getBytes()}
 
-                // Check if YubiKey is connected if it is needed
-                if (act.idStore.identity.privateKeyOps is YubiPrivateKeyOps && act.getActivePivSession() == null) {
-                    Log.d("YubiKey", "YubiKey is not connected for decryption")
-                    Toast.makeText(act, "YubiKey is not connected", Toast.LENGTH_SHORT).show()
-                    return -1 // YubiKey is not connected
-                }
+                waitForPivSession() // Ensure YubiKey is connected if needed
                 //decrypt the bytes to get the clear text
                 val clear = entryBytes?.let { act.idStore.identity.decryptPrivateMessage(it) }
 
@@ -703,12 +689,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
                             val entryBytes = decodedEntry?.let {it.getBytes()}
                             Log.d("entryBytes2", entryBytes.toString())
 
-                            // Check if YubiKey is connected if it is needed
-                            if (act.idStore.identity.privateKeyOps is YubiPrivateKeyOps && act.getActivePivSession() == null) {
-                                Log.d("YubiKey", "YubiKey is not connected for decryption")
-                                Toast.makeText(act, "YubiKey is not connected", Toast.LENGTH_SHORT).show()
-                                // TODO: Correct error handling? // YubiKey is not connected
-                            }
+                            waitForPivSession() // Ensure YubiKey is connected if needed
                             //decrypt the bytes to get the clear text
                             val clear = entryBytes?.let { act.idStore.identity.decryptPrivateMessage(it) }
                             Log.d("clear", clear.toString())
@@ -873,11 +854,7 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
         if (bodyList.typ == BIPF_BYTES) { // encrypted
             Log.d("rcvd encrypted log entry", "@" + fid.toBase64() + ".ed25519, seq=" + seq)
             // Check if YubiKey is connected if it is needed
-            if (act.idStore.identity.privateKeyOps is YubiPrivateKeyOps && act.getActivePivSession() == null) {
-                Log.d("YubiKey", "YubiKey is not connected for decryption")
-                Toast.makeText(act, "YubiKey is not connected", Toast.LENGTH_SHORT).show()
-                return null // YubiKey is not connected
-            }
+            waitForPivSession() // Ensure YubiKey is connected if needed
             val clear = act.idStore.identity.decryptPrivateMessage(bodyList.getBytes())
             if (clear != null) {
                 val bodyList2 = Bipf.decode(clear)
@@ -895,6 +872,21 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
         }
         Log.d("toFrontendObject", "could not decode or decrypt")
         return null
+    }
+
+    /**
+     * Blocks the thread if a YubiKey is needed for private key operations.
+     * Stops when a PivSession is available (i.e. when a YubiKey is available for use).
+     */
+    private fun waitForPivSession(): PivSession? {
+        while (act.idStore.identity.privateKeyOps is YubiPrivateKeyOps && act.getActivePivSession() == null) {
+            Log.d("YubiKey", "Waiting for PIV Session...")
+            act.runOnUiThread {
+                Toast.makeText(act, "Please connect YubiKey", Toast.LENGTH_SHORT).show()
+            }
+            Thread.sleep(1000) // wait for YubiKey to be connected
+        }
+        return act.getActivePivSession()
     }
 
 

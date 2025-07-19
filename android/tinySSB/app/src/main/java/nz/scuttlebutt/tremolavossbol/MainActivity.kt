@@ -527,21 +527,12 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         Log.d("onResume", "")
-        registerUntrusted()
-        executeThisTask()
-        deleteFromKillList()
-        super.onResume()
-        /*
-        try {
-            (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
-                .registerNetworkCallback(networkRequest, networkCallback!!)
-        } catch (e: Exception) {}
-        */
-
         try {
             yubikit.startNfcDiscovery(NfcConfiguration(), this) { device ->
-                Log.d("YubiKey", "YubiKey connected via NFC.")
-                Log.d("YubiKey", "Providers at discovery: ${Security.getProviders().joinToString(", ") { it.name }}")
+                runOnUiThread {
+                    Toast.makeText(this, "YubiKey discovered.\nStarting connection...", Toast.LENGTH_LONG).show()
+                }
+                Log.d("YubiKey", "YubiKey discovered via NFC.")
                 device.requestConnection(SmartCardConnection::class.java) { result ->
                     try {
                         // Use tmpPiv to avoid exposure before insertion of the provider
@@ -572,6 +563,17 @@ class MainActivity : Activity() {
         } catch (e: Exception) {
             Log.e("YubiKey", "Error starting NFC discovery: ${e.message}")
         }
+        registerUntrusted()
+        executeThisTask()
+        deleteFromKillList()
+        super.onResume()
+        /*
+        try {
+            (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
+                .registerNetworkCallback(networkRequest, networkCallback!!)
+        } catch (e: Exception) {}
+        */
+
 
         try {
             ble = BlePeers(this)
