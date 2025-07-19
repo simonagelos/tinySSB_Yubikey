@@ -2,10 +2,12 @@ package nz.scuttlebutt.tremolavossbol.tssb
 
 import android.util.AtomicFile
 import android.util.Log
+import android.widget.Toast
 import nz.scuttlebutt.tremolavossbol.MainActivity
 import nz.scuttlebutt.tremolavossbol.crypto.SodiumAPI.Companion.sha256
 import nz.scuttlebutt.tremolavossbol.crypto.SodiumAPI.Companion.signDetached
 import nz.scuttlebutt.tremolavossbol.crypto.SodiumAPI.Companion.verifySignDetached
+import nz.scuttlebutt.tremolavossbol.crypto.YubiPrivateKeyOps
 import nz.scuttlebutt.tremolavossbol.utils.Bipf
 import nz.scuttlebutt.tremolavossbol.utils.Constants.Companion.DMX_LEN
 import nz.scuttlebutt.tremolavossbol.utils.Constants.Companion.DMX_PFX
@@ -407,6 +409,11 @@ class Replica(val context: MainActivity, val datapath: File, val fid: ByteArray)
         val nam = DMX_PFX + fid + seq.toByteArray() + state.prev
         val dmx = nam.sha256().sliceArray(0 until DMX_LEN)
         val msg = dmx + ByteArray(1) { PKTTYPE_plain48.toByte()} + content
+        if (context.idStore.identity.privateKeyOps is YubiPrivateKeyOps && context.getActivePivSession() == null) {
+            Log.d("YubiKey", "YubiKey is not connected for signing")
+            Toast.makeText(context, "YubiKey is not connected", Toast.LENGTH_SHORT).show()
+            return -1 // YubiKey is not connected
+        }
         val wire = msg + context.idStore.identity.sign(nam + msg)!!
         if(wire.size != TINYSSB_PKT_LEN)
             return -1
@@ -454,6 +461,11 @@ class Replica(val context: MainActivity, val datapath: File, val fid: ByteArray)
 
         Log.d("replica write", "dmx is ${dmx.toHex()}, chnk_cnt: ${chunks.size}")
         val msg = dmx + ByteArray(1) { PKTTYPE_chain20.toByte()} + payload
+        if (context.idStore.identity.privateKeyOps is YubiPrivateKeyOps && context.getActivePivSession() == null) {
+            Log.d("YubiKey", "YubiKey is not connected for signing")
+            Toast.makeText(context, "YubiKey is not connected", Toast.LENGTH_SHORT).show()
+            return -1 // YubiKey is not connected
+        }
         val wire = msg + context.idStore.identity.sign(nam + msg)!!
         if(wire.size != TINYSSB_PKT_LEN)
             return -1

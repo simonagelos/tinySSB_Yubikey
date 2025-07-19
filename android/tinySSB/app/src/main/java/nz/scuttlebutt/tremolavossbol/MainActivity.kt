@@ -541,12 +541,17 @@ class MainActivity : Activity() {
         try {
             yubikit.startNfcDiscovery(NfcConfiguration(), this) { device ->
                 Log.d("YubiKey", "YubiKey connected via NFC.")
+                Log.d("YubiKey", "Providers at discovery: ${Security.getProviders().joinToString(", ") { it.name }}")
                 device.requestConnection(SmartCardConnection::class.java) { result ->
                     try {
-                        pivSession = PivSession(result.value)
-                        pivSession!!.verifyPin(YubiPrivateKeyOps.DEFAULT_PIN)
-                        pivSession!!.authenticate(YubiPrivateKeyOps.DEFAULT_MGMT)
-                        Security.insertProviderAt(PivProvider(pivSession!!), 1)
+                        // Use tmpPiv to avoid exposure before insertion of the provider
+                        val tmpPiv = PivSession(result.value)
+                        tmpPiv.verifyPin(YubiPrivateKeyOps.DEFAULT_PIN)
+                        tmpPiv.authenticate(YubiPrivateKeyOps.DEFAULT_MGMT)
+
+                        Security.removeProvider("YKPiv")
+                        Security.insertProviderAt(PivProvider(tmpPiv), 1)
+                        pivSession = tmpPiv
                         Log.d("YubiKey", "PIV session initialized.")
                         runOnUiThread {
                             Toast.makeText(this, "YubiKey connected", Toast.LENGTH_LONG).show()
