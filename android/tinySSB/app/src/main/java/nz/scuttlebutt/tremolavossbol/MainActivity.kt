@@ -39,8 +39,13 @@ import androidx.work.WorkManager
 import com.google.zxing.integration.android.IntentIntegrator
 import com.yubico.yubikit.android.YubiKitManager
 import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
+import com.yubico.yubikit.android.transport.nfc.NfcYubiKeyDevice
+import com.yubico.yubikit.core.YubiKeyDevice
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
+import com.yubico.yubikit.piv.KeyType
+import com.yubico.yubikit.piv.PinPolicy
 import com.yubico.yubikit.piv.PivSession
+import com.yubico.yubikit.piv.TouchPolicy
 import com.yubico.yubikit.piv.jca.PivProvider
 import nz.scuttlebutt.tremolavossbol.crypto.IdStore
 import nz.scuttlebutt.tremolavossbol.crypto.YubiPrivateKeyOps
@@ -58,6 +63,7 @@ import org.json.JSONObject
 import tremolavossbol.R
 import java.io.File
 import java.lang.Thread.sleep
+import java.lang.UnsupportedOperationException
 import java.net.InetAddress
 import java.net.MulticastSocket
 import java.security.Security
@@ -525,43 +531,62 @@ class MainActivity : Activity() {
         }
     }
 
+    /**
+     * Sets up the connection to a discovered YubiKey.
+     * Starts a [PivSession] and verifies the PIN and management key.
+     * The session is kept alive by continuously accessing the serial number.
+     * If the YubiKey is not supported or the connection fails, an error message is displayed.
+     */
+    private fun connectToYubiKey(device: YubiKeyDevice) {
+        runOnUiThread {
+            Toast.makeText(this, "YubiKey discovered via NFC.\nStarting connection...", Toast.LENGTH_LONG).show()
+        }
+        Log.d("YubiKey", "YubiKey discovered via NFC.")
+
+        device.requestConnection(SmartCardConnection::class.java) { result ->
+            try {
+                // Use tmpPiv to avoid exposure before insertion of the provider
+                val tmpPiv = PivSession(result.value)
+                tmpPiv.verifyPin(YubiPrivateKeyOps.DEFAULT_PIN)
+                tmpPiv.authenticate(YubiPrivateKeyOps.DEFAULT_MGMT)
+
+                tmpPiv.checkKeySupport(KeyType.ED25519, PinPolicy.ONCE, TouchPolicy.NEVER, false)
+                tmpPiv.checkKeySupport(KeyType.ED25519, PinPolicy.ONCE, TouchPolicy.NEVER, false)
+
+                Security.removeProvider("YKPiv")
+                Security.insertProviderAt(PivProvider(tmpPiv), 1)
+                pivSession = tmpPiv
+                Log.d("YubiKey", "PIV session initialized.")
+                runOnUiThread {
+                    Toast.makeText(this, "YubiKey connected", Toast.LENGTH_LONG).show()
+                }
+
+                while (true) { // Keep the session alive
+                    pivSession!!.serialNumber
+                    sleep(3000)
+                }
+            } catch (e: UnsupportedOperationException) {
+                Log.e("YubiKey", "Error connecting to YubiKey: ${e.message}")
+                runOnUiThread {
+                    Toast.makeText(this, "${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Log.e("YubiKey", "Error connecting to YubiKey: ${e.message}")
+                runOnUiThread {
+                    Toast.makeText(this, "Connection to YubiKey lost", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     override fun onResume() {
         Log.d("onResume", "")
         try {
             yubikit.startNfcDiscovery(NfcConfiguration(), this) { device ->
-                runOnUiThread {
-                    Toast.makeText(this, "YubiKey discovered.\nStarting connection...", Toast.LENGTH_LONG).show()
-                }
-                Log.d("YubiKey", "YubiKey discovered via NFC.")
-                device.requestConnection(SmartCardConnection::class.java) { result ->
-                    try {
-                        // Use tmpPiv to avoid exposure before insertion of the provider
-                        val tmpPiv = PivSession(result.value)
-                        tmpPiv.verifyPin(YubiPrivateKeyOps.DEFAULT_PIN)
-                        tmpPiv.authenticate(YubiPrivateKeyOps.DEFAULT_MGMT)
-
-                        Security.removeProvider("YKPiv")
-                        Security.insertProviderAt(PivProvider(tmpPiv), 1)
-                        pivSession = tmpPiv
-                        Log.d("YubiKey", "PIV session initialized.")
-                        runOnUiThread {
-                            Toast.makeText(this, "YubiKey connected", Toast.LENGTH_LONG).show()
-                        }
-
-                        while (true) { // Keep the session alive
-                            pivSession!!.serialNumber
-                            sleep(1000)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("YubiKey", "Error connecting to YubiKey: ${e.message}")
-                        runOnUiThread {
-                            Toast.makeText(this, "Connection to YubiKey lost", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
+               connectToYubiKey(device)
             }
         } catch (e: Exception) {
-            Log.e("YubiKey", "Error starting NFC discovery: ${e.message}")
+            Log.e("YubiKey", "NFC not available: ${e.message}")
         }
         registerUntrusted()
         executeThisTask()
