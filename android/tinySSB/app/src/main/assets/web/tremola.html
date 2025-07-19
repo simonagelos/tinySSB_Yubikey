@@ -431,34 +431,15 @@
     <div id='import-id-overlay' class='qr-overlay'>
       <div style='font-size: larger; text-align: center'><b>Import new ID</b></div>
       <div style='margin-left: 10px; margin-right: 10px;margin-bottom: 15px;'><p align=“justify“><b>Caution: </b>Ensure you avoid utilizing the same identity simultaneously on multiple devices, as this could result in concurrent actions, thus rendering your log invalid.</p></div>
-      <div style='text-align: center'><b>Import via QR Code</b></div>
-      <br>
-      <div style='display: flex; justify-content: right;'><button class="passive buttontext" onclick="qr_scan_start(QR_SCAN_TARGET.IMPORT_ID);" style="border: 0pt; height: 60pt; width: 120px; background-image: url('img/qr-code-scan.svg');margin: auto;">&nbsp;</button></div>
-      <br>
-      <div style='text-align: center'><b>Import via YubiKey</b></div>
-      <br>
-      <div style='display: flex; justify-content: left;'><button class="passive buttontext" onclick="scan_for_yubikey();" style="border: 0pt; height: 60pt; width: 120px; background-image: url('img/yubikey-svgrepo-com.svg');margin: auto;">&nbsp;</button></div>
-      <br>
-      <div style='text-align: center; margin-left: 10px; margin-right: 10px;margin-bottom: 15px;'><b>Import via copied secret key</b></div>
-      <textarea placeholder='{"curve": "ed25519", "secret": "YOUR SECRECT KEY"}' id="import-id-input" rows="3" onkeypress="onEnter(event)"></textarea>
-      <button class="passive buttontext" style="background-image: url('img/checked.svg');background-repeat: no-repeat;border: 0pt; height: 40px; width: 40px;" onclick="btn_import_id()" ></button>
-      <div></div>
-    </div>
-
-    <div id='YubiKey-scan-overlay' class='qr-overlay'>
-      <div style='font-size: larger; text-align: center'><b>Looking for Yubikey connection</b></div>
       <div style='margin-left: 10px; margin-right: 10px;margin-bottom: 15px;'><p align=“justify“><b>Caution: </b>Ensure that your Yubikey is connected either by USB or hold the Yubikey to your phone if you have NFC support.</p></div>
       <div style='text-align: center'><b>Import via QR Code</b></div>
       <br>
       <div style='display: flex; justify-content: right;'><button class="passive buttontext" onclick="qr_scan_start(QR_SCAN_TARGET.IMPORT_ID);" style="border: 0pt; height: 60pt; width: 120px; background-image: url('img/qr-code-scan.svg');margin: auto;">&nbsp;</button></div>
       <br>
-      <div style='text-align: center'><b>Import via YubiKey</b></div>
-      <br>
-      <div style='display: flex; justify-content: left;'><button class="passive buttontext" onclick="scan_for_yubikey();" style="border: 0pt; height: 60pt; width: 120px; background-image: url('img/yubikey-svgrepo-com.svg');margin: auto;">&nbsp;</button></div>
-      <br>
       <div style='text-align: center; margin-left: 10px; margin-right: 10px;margin-bottom: 15px;'><b>Import via copied secret key</b></div>
       <textarea placeholder='{"curve": "ed25519", "secret": "YOUR SECRECT KEY"}' id="import-id-input" rows="3" onkeypress="onEnter(event)"></textarea>
       <button class="passive buttontext" style="background-image: url('img/checked.svg');background-repeat: no-repeat;border: 0pt; height: 40px; width: 40px;" onclick="btn_import_id()" ></button>
+      <button class="passive buttontext" style="background-image: url('img/yubikey-svgrepo-com.svg');background-repeat: no-repeat;border: 0pt; height: 40px; width: 40px;" onclick="btn_import_id_yubikey()" ></button>
       <div></div>
     </div>
 

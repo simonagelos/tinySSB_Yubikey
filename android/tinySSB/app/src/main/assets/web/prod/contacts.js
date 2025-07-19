@@ -19,11 +19,16 @@ function menu_import_id() {
     document.getElementById('overlay-bg').style.display = 'initial'
 }
 
-function scan_for_yubikey() {
-    // test if Android is defined ...
-    closeOverlay();
-    backend("yubikeyscan.init");
-    document.getElementById("YubiKey-scan-overlay").style.display = 'initial'
+function btn_import_id_yubikey() {
+    var str = document.getElementById('import-id-input').value
+    if(str == "")
+        return
+    var r = import_id_yubikey(str)
+    if(r) {
+        launch_snackbar("Successfully imported, restarting...")
+    } else {
+        launch_snackbar("wrong format")
+    }
 }
 function btn_import_id() {
     var str = document.getElementById('import-id-input').value

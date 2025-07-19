@@ -295,6 +295,21 @@ function import_id(json_str) {
         return false // wrong format
     }
 
+    backend("importSecret 0 " + json['secret'])
+    return true
+}
+
+function import_id_yubikey(json_str) {
+    var json
+    try {
+        json = JSON.parse(json_str)
+    } catch (e) {
+        return false // argument is not a valid json string
+    }
+    if (Object.keys(json).length != 2 || !('curve' in json) || !('secret' in json)) {
+        return false // wrong format
+    }
+
     backend("importSecret 1 " + json['secret'])
     return true
 }

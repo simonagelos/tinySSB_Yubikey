@@ -310,7 +310,6 @@ function closeOverlay() {
     document.getElementById('connection-overlay').style.display = 'none';
     document.getElementById('import-id-overlay').style.display = 'none';
     document.getElementById('toast-overlay').style.display = 'none';
-    document.getElementById('YubiKey-scan-overlay').style.display = 'none';
 
     // kanban overlays
     document.getElementById('div:menu_history').style.display = 'none';
