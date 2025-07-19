@@ -18,6 +18,8 @@ import com.google.zxing.integration.android.IntentIntegrator
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.Tasks
+import com.yubico.yubikit.piv.PivSession
+import nz.scuttlebutt.tremolavossbol.crypto.YubiPrivateKeyOps
 
 import org.json.JSONArray
 import org.json.JSONObject
@@ -151,6 +153,11 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
                 return
             }
             "exportSecret" -> {
+                if (act.idStore.identity.privateKeyOps is YubiPrivateKeyOps) {
+                    Toast.makeText(act, "You cannot export your secret key from a YubiKey",
+                        Toast.LENGTH_LONG).show()
+                    return
+                }
                 val json = act.idStore.identity.toExportString()!!
                 eval("b2f_showSecret('${json}');")
                 val clipboard = act.getSystemService(ClipboardManager::class.java)
@@ -160,7 +167,21 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
                     Toast.LENGTH_LONG).show()
             }
             "importSecret" -> {
-                act.idStore.setNewIdentity(Base64.decode(args[1], Base64.NO_WRAP), null)
+                var piv : PivSession? = null
+                if (args[1] == "1") { // key import to YubiKey
+                    piv = act.getActivePivSession()
+                    if (piv == null) {
+                        Toast.makeText(act, "Please connect YubiKey",
+                            Toast.LENGTH_LONG).show()
+                        return
+                    }
+                }
+
+                // store the new ID
+                if (!act.idStore.setNewIdentity(Base64.decode(args[2], Base64.NO_WRAP), piv)) {
+                    Toast.makeText(act, "Import of new ID failed", Toast.LENGTH_LONG).show()
+                    return
+                }
                 act.tinyRepo.reset()
 
                 // restart App

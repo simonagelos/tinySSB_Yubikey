@@ -59,6 +59,15 @@ android {
     }
 }
 
+// Needed for Yubikit
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'org.slf4j') {
+            details.useVersion '1.7.36'
+        }
+    }
+}
+
 dependencies {
     api 'com.google.guava:guava:30.1.1-jre'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
@@ -94,14 +103,9 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
 
     // YubiKey
-    implementation('com.yubico.yubikit:android:2.8.1') {
-        exclude group: 'org.slf4j'
-        exclude group: 'com.github.spotbugs'
-    }
-    implementation('com.yubico.yubikit:piv:2.8.1') {
-        exclude group: 'org.slf4j'
-        exclude group: 'com.github.spotbugs'
-    }
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'com.yubico.yubikit:android:2.8.0'
+    implementation 'com.yubico.yubikit:piv:2.8.0'
 
     // database
     // implementation "androidx.room:room-runtime:2.3.0"
